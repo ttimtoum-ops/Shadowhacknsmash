@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>Les Cendres du Néant — Prototype 01</title>
+<style>
+:root{--bg:#080b12;--blue:#3478ff;--violet:#a64dff;--gold:#ffc857;--panel:rgba(9,13,23,.92);--line:#26334c}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#eef3ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}
+canvas{display:block;width:100vw;height:100dvh;background:#080b12}
+.safe{position:absolute;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);pointer-events:none}
+.ui{position:absolute;pointer-events:auto}
+.panel{background:var(--panel);border:1px solid #2b3c59;border-radius:14px;box-shadow:0 0 24px #05070c}
+button{color:#f4f7ff;background:linear-gradient(135deg,#142442,#0c1321);border:1px solid #36527b;border-radius:12px;font-weight:800;padding:12px 16px;font-size:14px;touch-action:manipulation}
+button:active{transform:scale(.96);border-color:var(--blue)}
+#menu{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#05070ce8,#05070c65),radial-gradient(circle at 70% 50%,#18264d,#080b12);padding:22px}
+.menuCard{width:min(92vw,440px);padding:24px;text-align:center}
+.logo{font-weight:1000;letter-spacing:.15em;font-size:clamp(26px,7vw,44px);text-shadow:0 0 20px #3478ff99;margin:0}
+.subtitle{color:#91a6ca;letter-spacing:.18em;font-size:11px;margin:8px 0 22px}
+.menuButtons{display:grid;gap:10px}
+.menuButtons button:first-child{background:linear-gradient(135deg,#2258cb,#122347)}
+#hud{display:none;inset:0}
+.top{left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);display:flex;justify-content:space-between;align-items:flex-start}
+.stats{min-width:155px;padding:9px 12px;font-size:12px}
+.hpbar,.xpbar{height:7px;border-radius:8px;background:#202a3b;overflow:hidden;margin-top:5px}
+.hpfill{height:100%;background:linear-gradient(90deg,#a32e58,#ff557c);width:100%}
+.xpfill{height:100%;background:linear-gradient(90deg,#2563db,#64c6ff);width:0}
+#pauseBtn{width:44px;height:44px;padding:0;font-size:18px}
+#bottom{bottom:calc(env(safe-area-inset-bottom) + 12px);left:10px;right:10px;display:flex;align-items:end;justify-content:space-between}
+#stick{width:122px;height:122px;border-radius:50%;background:#101b2dcc;border:1px solid #42577a;position:relative;touch-action:none}
+#knob{width:48px;height:48px;border-radius:50%;background:linear-gradient(145deg,#4b83ff,#1c3b7c);border:2px solid #9fc2ff;position:absolute;left:36px;top:36px;box-shadow:0 0 18px #3478ff66}
+.skillset{display:flex;gap:8px}
+.skill{width:62px;height:62px;border-radius:50%;padding:0;position:relative;overflow:hidden;background:radial-gradient(circle at 30% 25%,#284a8b,#101725 75%);font-size:18px}
+.skill small{position:absolute;bottom:4px;left:0;right:0;font-size:9px;color:#cbd9f5}
+.skill .cd{position:absolute;inset:0;background:#05070cb8;display:none;align-items:center;justify-content:center;font-size:13px}
+#toast{position:absolute;top:28%;left:50%;transform:translateX(-50%);padding:10px 15px;opacity:0;transition:opacity .2s;background:#0b1426;border:1px solid #3972dc;border-radius:12px;font-weight:800;pointer-events:none}
+.overlay{position:absolute;inset:0;background:#03050acb;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay .panel{width:min(92vw,400px);padding:22px;text-align:center}
+#levelChoices{display:grid;gap:9px;margin-top:12px}
+#levelChoices button{min-height:55px}
+#message{color:#9db3d7;font-size:12px;line-height:1.5}
+@media (orientation:portrait){.stats{min-width:140px}#bottom{align-items:end}.skill{width:56px;height:56px}#stick{width:112px;height:112px}#knob{left:32px;top:32px}}
+</style></head><body>
+<canvas id="game"></canvas>
+<div class="safe">
+<div id="menu"><div class="menuCard panel"><h1 class="logo">LES CENDRES<br>DU NÉANT</h1><div class="subtitle">PROTOCOLE D'ÉVEIL · 01</div><p id="menuText">La brèche s'est ouverte. Quelque chose vous observe depuis l'autre côté.</p><div class="menuButtons"><button id="play">▶ ENTRER DANS LA BRÈCHE</button><button id="heroBtn">⚔ CHASSEUR · RAVAGEUR</button><button id="aboutBtn">ℹ PROTOCOLE</button></div></div></div>
+<div id="hud" class="ui">
+<div class="top ui"><div class="stats panel"><div><b id="level">NIVEAU 1</b> · <span id="kills">0 élimination</span></div><div class="hpbar"><div id="hpfill" class="hpfill"></div></div><div id="hptext">100 / 100 PV</div><div class="xpbar"><div id="xpfill" class="xpfill"></div></div><div id="xptext">0 / 30 XP</div></div><button id="pauseBtn">Ⅱ</button></div>
+<div id="bottom" class="ui"><div id="stick"><div id="knob"></div></div><div class="skillset"><button class="skill" id="skill1">✦<small>ÉCLAT</small><div class="cd"></div></button><button class="skill" id="skill2">◉<small>ONDE</small><div class="cd"></div></button><button class="skill" id="skill3">♜<small>OMBRE</small><div class="cd"></div></button></div></div>
+<div id="toast"></div></div>
+<div id="pause" class="overlay"><div class="panel"><h2>PAUSE</h2><p id="pauseInfo">La brèche attend.</p><div class="menuButtons"><button id="resume">▶ REPRENDRE</button><button id="toMenu">⌂ RETOUR AU MENU</button></div></div>
+<div id="dead" class="overlay"><div class="panel"><h1>VOUS ÊTES TOMBÉ</h1><p>Les ombres n'oublient pas. Votre prochaine chasse commence ici.</p><p id="deadStats"></p><div class="menuButtons"><button id="retry">↻ RECOMMENCER</button><button id="deadMenu">⌂ MENU PRINCIPAL</button></div></div></div>
+<div id="levelup" class="overlay"><div class="panel"><h2>ÉVEIL — CHOISISSEZ</h2><p>Votre pouvoir grandit.</p><div id="levelChoices"></div></div></div>
+<div id="info" class="overlay"><div class="panel"><h2>PROTOCOLE 01</h2><p id="message">Version 0.2 : quatre classes à statistiques distinctes, 20 améliorations, compétences, ombres et boss à attaques annoncées. Les systèmes restent en développement.</p><button id="infoClose">FERMER</button></div></div>
+<script>
+(()=>{"use strict";
+const canvas=document.querySelector("#game"),ctx=canvas.getContext("2d");
+const $=s=>document.querySelector(s);
+const menu=$("#menu"),hud=$("#hud"),pause=$("#pause"),dead=$("#dead"),levelup=$("#levelup"),info=$("#info");
+let W=0,H=0,dpr=1,gameOn=false,paused=false,deadFlag=false,menuMode=true,last=0,elapsed=0,spawnTimer=0,shake=0,flash=0;
+let player,enemies=[],particles=[],damageTexts=[],xpOrbs=[],shadowAllies=[];
+let keys={x:0,y:0},stickActive=false,stickPointer=null;
+const skills=[{name:"ÉCLAT",cd:5,t:0},{name:"ONDE",cd:9,t:0},{name:"OMBRE",cd:15,t:0}];
+let selectedClass="RAVAGEUR",bossSpawned=false,kills=0,level=1,xp=0,xpNeed=30,upgradePending=false;
+const upgrades=[["Lame affûtée","Dégâts +25%",p=>p.damage*=1.25],["Sang du chasseur","PV maximum +20",p=>{p.maxHp+=20;p.hp=Math.min(p.maxHp,p.hp+20)}],["Pas spectral","Vitesse +12%",p=>p.speed*=1.12],["Essence absorbée","Récupérez 15 PV",p=>p.hp=Math.min(p.maxHp,p.hp+15)],["Éveil critique","Critiques +8%",p=>p.crit+=.08],["Frappe lourde","Dégâts +20%",p=>p.damage*=1.2],["Réflexes surnaturels","Attaque +10%",p=>p.attackRate*=.9],["Aura de chasse","Portée +20",p=>p.attackRange+=20],["Siphon vital","Soins +2 PV par kill",p=>p.healOnKill+=2],["Résonance bleue","Compétences +30%",p=>p.skillPower*=1.3],["Vortex violet","Onde +30% rayon",p=>p.waveRadius*=1.3],["Lien des ombres","Ombres +30%",p=>p.shadowPower*=1.3],["Fureur","Critiques +5%",p=>p.crit+=.05],["Carapace","Réduction dégâts +8%",p=>p.armor+=.08],["Cœur abyssal","PV max +15%",p=>{p.maxHp*=1.15;p.hp=p.maxHp}],["Essence accélérée","XP +20%",p=>p.xpBonus*=1.2],["Double extraction","Chance ombre +15%",p=>p.shadowChance+=.15],["Marque du boss","Dégâts boss +25%",p=>p.bossBonus*=1.25],["Lame fantôme","Dégâts +15%",p=>p.damage*=1.15],["Surcharge","Vitesse et dégâts +8%",p=>{p.speed*=1.08;p.damage*=1.08}]];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener("resize",resize);resize();
+function reset(){let presets={RAVAGEUR:{hp:90,speed:235,damage:19,crit:.18,rate:.36},BASTION:{hp:155,speed:155,damage:32,crit:.07,rate:.62},ARCANISTE:{hp:95,speed:180,damage:24,crit:.12,rate:.5},EVOCATEUR:{hp:105,speed:185,damage:17,crit:.1,rate:.52}};let c=presets[selectedClass]||presets.RAVAGEUR;player={x:0,y:0,vx:0,vy:0,hp:c.hp,maxHp:c.hp,speed:c.speed,damage:c.damage,crit:c.crit,attack:0,attackRate:c.rate,attackRange:92,radius:15,invuln:0,anim:0,faceX:0,faceY:1,skillPower:1,waveRadius:170,shadowPower:1,healOnKill:0,armor:selectedClass==='BASTION'?.12:0,xpBonus:1,shadowChance:selectedClass==='EVOCATEUR'?.32:.18,bossBonus:1};enemies=[];particles=[];damageTexts=[];xpOrbs=[];shadowAllies=[];kills=0;level=1;xp=0;xpNeed=30;elapsed=0;spawnTimer=0;bossSpawned=false;deadFlag=false;paused=false;skills.forEach(s=>s.t=0);$("#level").textContent="NIVEAU 1";toast("BRÈCHE ACTIVE");}
+function start(){reset();menu.style.display="none";hud.style.display="block";gameOn=true;const skillNames={RAVAGEUR:['LAME','DASH','OMBRE'],BASTION:['FRACAS','GARDE','OMBRE'],ARCANISTE:['ÉCLAT','ONDE','RUNE'],EVOCATEUR:['DRAIN','VORTEX','OMBRE']};skillNames[selectedClass].forEach((n,i)=>{$('#skill'+(i+1)+' small').textContent=n});menuMode=false;paused=false;dead.style.display="none";pause.style.display="none";levelup.style.display="none";last=performance.now();requestAnimationFrame(loop)}
+function toMain(){gameOn=false;menuMode=true;paused=false;deadFlag=false;hud.style.display="none";pause.style.display="none";dead.style.display="none";levelup.style.display="none";menu.style.display="flex";}
+function toast(t){let el=$("#toast");el.textContent=t;el.style.opacity=1;setTimeout(()=>el.style.opacity=0,1400)}
+$("#play").onclick=start;$("#pauseBtn").onclick=()=>pauseGame();$("#resume").onclick=()=>{paused=false;pause.style.display="none";last=performance.now();requestAnimationFrame(loop)};
+$("#toMenu").onclick=toMain;$("#retry").onclick=start;$("#deadMenu").onclick=toMain;
+$('#heroBtn').onclick=()=>{const classes=['RAVAGEUR','BASTION','ARCANISTE','EVOCATEUR'];selectedClass=classes[(classes.indexOf(selectedClass)+1)%classes.length];$('#heroBtn').textContent='⚔ CHASSEUR · '+selectedClass;const desc={RAVAGEUR:'Rapide, critique, spécialiste des exécutions.',BASTION:'Lourd, résistant, fracasse les ennemis.',ARCANISTE:'Magie à distance et dégâts de zone.',EVOCATEUR:'Commandez des ombres qui combattent pour vous.'};$('#menuText').textContent=desc[selectedClass];};
+$("#aboutBtn").onclick=()=>info.style.display="flex";$("#infoClose").onclick=()=>info.style.display="none";
+function pauseGame(){if(!gameOn||deadFlag)return;paused=true;pause.style.display="flex";}
+function rand(a,b){return a+Math.random()*(b-a)}
+function worldToScreen(x,y){return {x:W/2+(x-player.x)*.92,y:H/2+(y-player.y)*.62}}
+function spawnEnemy(boss=false){let a=rand(0,Math.PI*2),r=rand(Math.min(W,H)*.45,Math.min(W,H)*.68);let x=player.x+Math.cos(a)*r,y=player.y+Math.sin(a)*r;let type=boss?'DEVOREUR':['FLETRI','TRAQUEUR','FENDU','VIGIE'][Math.floor(Math.random()*4)];let hp=boss?900:rand(28,48)+level*3;let t={FLETRI:{speed:42,scale:1,mult:1},TRAQUEUR:{speed:72,scale:.78,mult:.75},FENDU:{speed:34,scale:1.25,mult:1.5},VIGIE:{speed:30,scale:.9,mult:1.1}}[type]||{speed:40,scale:1,mult:1};hp*=t.mult;enemies.push({x,y,hp,maxHp:hp,boss,type,radius:boss?36:rand(11,16)*t.scale,speed:boss?40:t.speed,attack:0,hit:0,phase:0,angle:0,telegraph:0,attackKind:0});}
+function spawnFx(x,y,color,n=10){for(let i=0;i<n;i++){let a=rand(0,6.28),v=rand(30,180);particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.2,.6),max:.6,color,r:rand(1,4)})}}
+function addText(x,y,text,color="#eaf2ff"){damageTexts.push({x,y,text,color,life:.65})}
+function attackNearest(){if(player.attack>0)return;let target=null,dist=Infinity;for(let e of enemies){let d=Math.hypot(e.x-player.x,e.y-player.y);if(d<dist&&d<player.attackRange){dist=d;target=e}}if(!target)return;player.attack=player.attackRate;let crit=Math.random()<player.crit,damage=player.damage*(crit?2:1);if(target.boss)damage*=player.bossBonus;if(selectedClass==='ARCANISTE')damage*=1.18;if(selectedClass==='EVOCATEUR'){damage*=.85;shadowAllies.push({x:player.x,y:player.y,life:2.2,legend:false,damage:player.damage*.4*player.shadowPower})}target.hp-=damage;target.hit=.13;addText(target.x,target.y-20,Math.round(damage)+(crit?"!":""),crit?"#ffc857":"#eaf2ff");spawnFx(target.x,target.y,crit?"#ffc857":"#55a3ff",crit?9:5);if(target.hp<=0)killEnemy(target);}
+function killEnemy(e){let i=enemies.indexOf(e);if(i<0)return;enemies.splice(i,1);kills++;spawnFx(e.x,e.y,e.boss?"#ffc857":"#a64dff",e.boss?38:14);xpOrbs.push({x:e.x,y:e.y,v:(e.boss?60:8)*player.xpBonus,life:15});player.hp=Math.min(player.maxHp,player.hp+player.healOnKill);if(Math.random()<player.shadowChance)shadowAllies.push({life:12,x:e.x,y:e.y});if(e.boss){toast("COLÈRE DU COLOSSE APPAISÉE");}if(kills%5===0)toast(kills+" ennemis éliminés");}
+function skill(i){if(!gameOn||paused||deadFlag||skills[i].t>0)return;skills[i].t=skills[i].cd;if(i===0){let nearest=enemies.filter(e=>Math.hypot(e.x-player.x,e.y-player.y)<260).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y)).slice(0,5);nearest.forEach(e=>{e.hp-=player.damage*2.1*player.skillPower*(selectedClass==='RAVAGEUR'?1.25:1);e.hit=.2;addText(e.x,e.y-18,Math.round(player.damage*2.1),"#72a9ff");spawnFx(e.x,e.y,"#4b91ff",7);if(e.hp<=0)killEnemy(e)});spawnFx(player.x,player.y,"#4b91ff",22);}
+else if(i===1){for(let e of [...enemies])if(Math.hypot(e.x-player.x,e.y-player.y)<player.waveRadius){e.hp-=player.damage*1.8*player.skillPower*(selectedClass==='ARCANISTE'?1.25:1);e.hit=.2;addText(e.x,e.y-18,Math.round(player.damage*1.8),"#c787ff");spawnFx(e.x,e.y,"#a64dff",8);if(e.hp<=0)killEnemy(e)}spawnFx(player.x,player.y,"#a64dff",35)}
+else{for(let n=0;n<(selectedClass==='EVOCATEUR'?2:1);n++)shadowAllies.push({x:player.x,y:player.y,life:18,legend:true,damage:22*player.shadowPower});toast("OMBRE EXTRAITE : SENTINELLE")}}
+$("#skill1").onclick=()=>skill(0);$("#skill2").onclick=()=>skill(1);$("#skill3").onclick=()=>skill(2);
+function levelGain(){if(xp>=xpNeed&&!upgradePending){xp-=xpNeed;level++;xpNeed=Math.floor(xpNeed*1.35+10);upgradePending=true;paused=true;levelup.style.display="flex";let choices=[...upgrades].sort(()=>Math.random()-.5).slice(0,3);$("#levelChoices").innerHTML="";choices.forEach(u=>{let b=document.createElement("button");b.textContent=u[0]+" — "+u[1];b.onclick=()=>{u[2](player);upgradePending=false;levelup.style.display="none";paused=false;last=performance.now();requestAnimationFrame(loop);toast("NIVEAU "+level)};$("#levelChoices").appendChild(b)});}}
+function update(dt){elapsed+=dt;spawnTimer-=dt;player.anim+=dt*10;player.attack-=dt;player.invuln-=dt;skills.forEach(s=>s.t=Math.max(0,s.t-dt));
+let mx=keys.x,my=keys.y,mag=Math.hypot(mx,my);if(mag>1){mx/=mag;my/=mag}let speed=player.speed;player.vx+=(mx*speed-player.vx)*Math.min(1,dt*9);player.vy+=(my*speed-player.vy)*Math.min(1,dt*9);player.x+=player.vx*dt;player.y+=player.vy*dt;if(mag>.1){player.faceX=mx;player.faceY=my}
+if(spawnTimer<=0){spawnEnemy(false);spawnTimer=Math.max(.25,1.05-elapsed*.015);if(elapsed>180&&!bossSpawned){spawnEnemy(true);bossSpawned=true;toast("⚠ COLOSSE : LE DÉVOREUR");}}
+if(enemies.length<200&&elapsed>35&&Math.random()<dt*1.3)spawnEnemy(false);
+for(let e of enemies){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.angle=Math.atan2(dy,dx);if(e.boss){e.phase+=dt;if(e.telegraph<=0&&e.phase>4){e.telegraph=1.15;e.attackKind=(e.attackKind+1)%2;e.phase=0;toast(e.attackKind===0?'⚠ IMPACT AU SOL — ÉLOIGNEZ-VOUS':'⚠ CHARGE DU DÉVOREUR — ESQUIVEZ')}}if(e.boss&&e.telegraph>0){e.telegraph-=dt;if(e.telegraph<=0&&d<145&&player.invuln<=0){let dmg=Math.max(1,28*(1-player.armor));player.hp-=dmg;player.invuln=.65;shake=12;flash=.18;addText(player.x,player.y-25,'-'+Math.round(dmg),'#ff416a');spawnFx(player.x,player.y,'#ff416a',24)}}if(d>e.radius+player.radius+3){e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt}else{e.attack-=dt;if(e.attack<=0){e.attack=e.boss?1.2:1.0;if(player.invuln<=0){player.hp-=Math.max(1,(e.boss?14:6)*(1-player.armor));player.invuln=.35;shake=7;flash=.1;addText(player.x,player.y-25,"-"+(e.boss?14:6),"#ff6584");spawnFx(player.x,player.y,"#ff5277",7)}}}e.hit=Math.max(0,e.hit-dt)}
+if(player.attack<=0)attackNearest();
+for(let o of xpOrbs){o.life-=dt;let dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy);if(d<150){o.x+=dx/(d||1)*220*dt;o.y+=dy/(d||1)*220*dt}if(d<18){xp+=o.v;o.life=0}}
+xpOrbs=xpOrbs.filter(o=>o.life>0);levelGain();
+for(let a of shadowAllies){a.life-=dt;let t=enemies[0];if(t){let dx=t.x-a.x,dy=t.y-a.y,d=Math.hypot(dx,dy)||1;a.x+=dx/d*100*dt;a.y+=dy/d*100*dt;if(d<45){t.hp-=(a.damage||18)*dt;if(t.hp<=0)killEnemy(t)}}}shadowAllies=shadowAllies.filter(a=>a.life>0);
+for(let p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.96;p.vy*=.96}particles=particles.filter(p=>p.life>0);
+for(let t of damageTexts){t.life-=dt;t.y-=30*dt}damageTexts=damageTexts.filter(t=>t.life>0);
+if(player.hp<=0){player.hp=0;deadFlag=true;gameOn=false;dead.style.display="flex";$("#deadStats").textContent="Niveau "+level+" · "+kills+" éliminations · "+Math.floor(elapsed)+" secondes";return}
+$("#level").textContent="NIVEAU "+level;$("#kills").textContent=kills+" élimination"+(kills>1?"s":"");$("#hpfill").style.width=player.hp/player.maxHp*100+"%";$("#hptext").textContent=Math.ceil(player.hp)+" / "+player.maxHp+" PV";$("#xpfill").style.width=xp/xpNeed*100+"%";$("#xptext").textContent=Math.floor(xp)+" / "+xpNeed+" XP";
+skills.forEach((s,i)=>{let cd=$("#skill"+(i+1)+" .cd");if(s.t>0){cd.style.display="flex";cd.textContent=s.t.toFixed(1)}else cd.style.display="none"});
+}
+function drawGround(){ctx.fillStyle="#0a101b";ctx.fillRect(0,0,W,H);let tile=62,offX=(W/2-player.x*.92)%tile,offY=(H/2-player.y*.62)%tile;for(let x=-tile;x<W+tile;x+=tile)for(let y=-tile;y<H+tile;y+=tile){let xx=x+offX,yy=y+offY;ctx.fillStyle=((Math.floor(x/tile)+Math.floor(y/tile))&1)?"#101a29":"#0d1623";ctx.fillRect(xx,yy,tile-2,tile-2);ctx.strokeStyle="#192638";ctx.strokeRect(xx,yy,tile-2,tile-2);if(Math.random()<.0015){ctx.fillStyle="#29436c";ctx.fillRect(xx+20,yy+20,3,3)}}}
+function drawEntity(x,y,kind,hit=0,boss=false){let s=worldToScreen(x,y);ctx.save();ctx.translate(s.x,s.y);ctx.fillStyle="#02050a99";ctx.beginPath();ctx.ellipse(0,8,boss?30:18,boss?12:7,0,0,Math.PI*2);ctx.fill();if(kind==="player"){ctx.shadowBlur=15;ctx.shadowColor="#3478ff";ctx.fillStyle="#233b65";ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(12,-4);ctx.lineTo(9,11);ctx.lineTo(-9,11);ctx.lineTo(-12,-4);ctx.closePath();ctx.fill();ctx.strokeStyle="#74a9ff";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#d9e7ff";ctx.fillRect(-4,-8,8,3);ctx.fillStyle="#427cff";ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#a9c6ff";ctx.fillRect(-13,2,3,10);ctx.fillRect(10,-3,3,13);ctx.shadowBlur=0;}
+else if(kind==="enemy"){ctx.fillStyle=hit>0?"#c1d7ff":"#3b225e";ctx.strokeStyle="#b25aff";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-14);ctx.lineTo(12,-3);ctx.lineTo(9,10);ctx.lineTo(0,15);ctx.lineTo(-10,7);ctx.lineTo(-13,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#d39aff";ctx.fillRect(-6,-4,4,3);ctx.fillRect(3,-4,4,3);}
+else if(kind==="boss"){ctx.shadowBlur=18;ctx.shadowColor="#a64dff";ctx.fillStyle="#241637";ctx.strokeStyle="#ffb84d";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-40);ctx.lineTo(26,-18);ctx.lineTo(30,12);ctx.lineTo(12,30);ctx.lineTo(-14,26);ctx.lineTo(-30,10);ctx.lineTo(-24,-18);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#ffcf73";ctx.fillRect(-10,-8,7,5);ctx.fillRect(5,-8,7,5);ctx.shadowBlur=0;}
+ctx.restore();return s}
+function draw(){ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-shake,shake));shake=Math.max(0,shake-1.2)}drawGround();for(let o of xpOrbs){let s=worldToScreen(o.x,o.y);ctx.fillStyle="#ffc857";ctx.shadowBlur=10;ctx.shadowColor="#ffc857";ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+for(let a of shadowAllies){let s=worldToScreen(a.x,a.y);ctx.fillStyle=a.legend?"#a64dff":"#6d55a5";ctx.shadowBlur=12;ctx.shadowColor=ctx.fillStyle;ctx.beginPath();ctx.ellipse(s.x,s.y,10,17,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+for(let e of enemies){let s=drawEntity(e.x,e.y,e.boss?"boss":"enemy",e.hit,e.boss);if(e.boss&&e.telegraph>0){let ps=worldToScreen(e.x,e.y);ctx.strokeStyle="#ff416a";ctx.lineWidth=3;ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(ps.x,ps.y,145*(1.15-e.telegraph)/1.15,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}if(e.boss){ctx.fillStyle="#120b1d";ctx.fillRect(s.x-35,s.y-52,70,6);ctx.fillStyle="#ff4f79";ctx.fillRect(s.x-35,s.y-52,70*(e.hp/e.maxHp),6)}}
+drawEntity(player.x,player.y,"player");for(let p of particles){let s=worldToScreen(p.x,p.y);ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(s.x,s.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+for(let t of damageTexts){let s=worldToScreen(t.x,t.y);ctx.globalAlpha=Math.max(0,t.life/.65);ctx.font="bold 15px system-ui";ctx.fillStyle=t.color;ctx.fillText(t.text,s.x,s.y)}ctx.globalAlpha=1;
+let vign=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.72);vign.addColorStop(0,"transparent");vign.addColorStop(1,"#02040b99");ctx.fillStyle=vign;ctx.fillRect(0,0,W,H);if(flash>0){ctx.fillStyle="#ff365522";ctx.fillRect(0,0,W,H);flash-=.01}ctx.restore()}
+function loop(now){if(!gameOn||paused||deadFlag)return;let dt=Math.min(.035,(now-last)/1000||0);last=now;update(dt);draw();if(gameOn&&!paused&&!deadFlag)requestAnimationFrame(loop)}
+// joystick pointer handling
+const stick=$("#stick"),knob=$("#knob");
+function setStick(e){let r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,lim=35,d=Math.hypot(dx,dy);if(d>lim){dx*=lim/d;dy*=lim/d}knob.style.transform=`translate(${dx}px,${dy}px)`;keys.x=dx/lim;keys.y=dy/lim}
+stick.addEventListener("pointerdown",e=>{e.preventDefault();stickActive=true;stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);setStick(e)});
+stick.addEventListener("pointermove",e=>{if(stickActive&&e.pointerId===stickPointer)setStick(e)});
+function stopStick(e){if(e.pointerId===stickPointer){stickActive=false;stickPointer=null;keys.x=0;keys.y=0;knob.style.transform="translate(0,0)"}}
+stick.addEventListener("pointerup",stopStick);stick.addEventListener("pointercancel",stopStick);
+addEventListener("keydown",e=>{if(e.key==="ArrowUp"||e.key==="w")keys.y=-1;if(e.key==="ArrowDown"||e.key==="s")keys.y=1;if(e.key==="ArrowLeft"||e.key==="a")keys.x=-1;if(e.key==="ArrowRight"||e.key==="d")keys.x=1;if(e.key==="Escape")pauseGame()});
+addEventListener("keyup",e=>{if(["ArrowUp","w","ArrowDown","s"].includes(e.key))keys.y=0;if(["ArrowLeft","a","ArrowRight","d"].includes(e.key))keys.x=0});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&gameOn&&!paused)pauseGame()});
+player={x:0,y:0};drawGround();})();
+</script></body></html>
